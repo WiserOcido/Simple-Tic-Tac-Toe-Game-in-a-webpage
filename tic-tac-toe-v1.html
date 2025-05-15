@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic Tac Toe</title> <style>
+        /* Basic styling for the body to center the game */
+        body {
+            display: flex; /* Uses flexbox for layout */
+            justify-content: center; /* Centers content horizontally */
+            align-items: center; /* Centers content vertically */
+            min-height: 100vh; /* Sets minimum height of the body to the viewport height */
+            background-color: #f0f0f0; /* Sets a light gray background color */
+            margin: 0; /* Removes default body margin */
+            font-family: sans-serif; /* Sets a generic sans-serif font */
+        }
+
+        /* Styling for the game container */
+        .container {
+            text-align: center; /* Centers text within the container */
+            background-color: #fff; /* Sets a white background */
+            padding: 20px; /* Adds padding around the content */
+            border-radius: 8px; /* Rounds the corners of the container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+        }
+
+        /* Styling for the game board */
+        .board {
+            display: grid; /* Uses CSS Grid for the board layout */
+            grid-template-columns: repeat(3, 100px); /* Creates 3 columns each 100px wide */
+            grid-template-rows: repeat(3, 100px); /* Creates 3 rows each 100px high */
+            gap: 5px; /* Adds a gap between grid items (cells) */
+            margin: 20px auto; /* Centers the board horizontally and adds vertical margin */
+            border: 2px solid #333; /* Adds a border around the board */
+        }
+
+        /* Styling for each cell in the board */
+        .cell {
+            width: 100px; /* Sets the width of the cell */
+            height: 100px; /* Sets the height of the cell */
+            display: flex; /* Uses flexbox to center content within the cell */
+            justify-content: center; /* Centers content horizontally */
+            align-items: center; /* Centers content vertically */
+            font-size: 4em; /* Sets the font size for the X and O */
+            cursor: pointer; /* Changes the cursor to a pointer to indicate it's clickable */
+            border: 1px solid #ccc; /* Adds a light gray border to each cell */
+            box-sizing: border-box; /* Includes border and padding in the element's total width and height */
+            user-select: none; /* Prevents text selection within the cell */
+            background-color: #eee; /* Sets a light gray background for cells */
+        }
+
+        /* Hover effect for cells */
+        .cell:hover {
+            background-color: #ddd; /* Changes background color on hover */
+        }
+
+        /* Styling for the game status message */
+        #status {
+            margin-top: 15px; /* Adds space above the status message */
+            font-size: 1.2em; /* Sets the font size */
+            font-weight: bold; /* Makes the text bold */
+        }
+
+        /* Styling for the restart button */
+        #restartButton {
+            margin-top: 15px; /* Adds space above the button */
+            padding: 10px 20px; /* Adds padding inside the button */
+            font-size: 1em; /* Sets the font size */
+            cursor: pointer; /* Changes the cursor to a pointer */
+            border: none; /* Removes the default border */
+            border-radius: 5px; /* Rounds the corners of the button */
+            background-color: #5cb85c; /* Sets a green background color */
+            color: white; /* Sets the text color to white */
+        }
+
+        /* Hover effect for the restart button */
+        #restartButton:hover {
+            background-color: #4cae4c; /* Darkens the background color on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container"> <h1>Tic Tac Toe</h1> <div class="board" id="gameBoard"> </div>
+        <p id="status">Player X's turn</p> <button id="restartButton">Restart Game</button> </div>
+
+    <script>
+        // JavaScript code for the Tic Tac Toe game
+
+        const gameBoard = document.getElementById('gameBoard'); // Gets the game board element by its ID
+        const statusDisplay = document.getElementById('status'); // Gets the status display element by its ID
+        const restartButton = document.getElementById('restartButton'); // Gets the restart button element by its ID
+        let board = ['', '', '', '', '', '', '', '', '']; // Represents the game board state (9 empty strings)
+        let currentPlayer = 'X'; // Sets the starting player to X
+        let gameActive = true; // Flag to indicate if the game is currently active
+
+        // Winning conditions (indices of the board array)
+        const winningConditions = [
+            [0, 1, 2], // Top row
+            [3, 4, 5], // Middle row
+            [6, 7, 8], // Bottom row
+            [0, 3, 6], // Left column
+            [1, 4, 7], // Middle column
+            [2, 5, 8], // Right column
+            [0, 4, 8], // Diagonal from top-left to bottom-right
+            [2, 4, 6]  // Diagonal from top-right to bottom-left
+        ];
+
+        // Function to initialize the game board visually
+        function initializeBoard() {
+            gameBoard.innerHTML = ''; // Clears any existing cells in the board
+            board.forEach((cell, index) => { // Iterates through the board array
+                const cellElement = document.createElement('div'); // Creates a new div element for a cell
+                cellElement.classList.add('cell'); // Adds the 'cell' class to the element for styling
+                cellElement.dataset.index = index; // Stores the index of the cell as a data attribute
+                cellElement.textContent = cell; // Sets the initial content of the cell (empty string)
+                cellElement.addEventListener('click', handleCellClick); // Adds a click event listener to the cell
+                gameBoard.appendChild(cellElement); // Appends the created cell element to the game board
+            });
+        }
+
+        // Function to handle a cell click
+        function handleCellClick(event) {
+            const clickedCell = event.target; // Gets the clicked cell element
+            const clickedCellIndex = parseInt(clickedCell.dataset.index); // Gets the index from the data attribute
+
+            // Checks if the cell is already filled or the game is inactive
+            if (board[clickedCellIndex] !== '' || !gameActive) {
+                return; // If so, do nothing and exit the function
+            }
+
+            handlePlayerChange(clickedCell, clickedCellIndex); // Calls the function to handle player change and board update
+            checkResult(); // Checks for a win or draw after the move
+        }
+	/* Coded by John Darryl T. Ocido */
+        // Function to handle updating the board and changing the player
+        function handlePlayerChange(clickedCell, index) {
+            board[index] = currentPlayer; // Updates the board array with the current player's symbol
+            clickedCell.textContent = currentPlayer; // Updates the text content of the clicked cell
+        }
+
+        // Function to check the game result (win or draw)
+        function checkResult() {
+            let roundWon = false; // Flag to indicate if the current round is won
+            for (let i = 0; i < winningConditions.length; i++) { // Iterates through all winning conditions
+                const winCondition = winningConditions[i]; // Gets a single winning condition
+                let pos1 = board[winCondition[0]]; // Gets the symbol at the first position of the condition
+                let pos2 = board[winCondition[1]]; // Gets the symbol at the second position of the condition
+                let pos3 = board[winCondition[2]]; // Gets the symbol at the third position of the condition
+
+                // If any of the positions are empty, continue to the next condition
+                if (pos1 === '' || pos2 === '' || pos3 === '') {
+                    continue;
+                }
+
+                // If all three positions have the same symbol, a win is detected
+                if (pos1 === pos2 && pos2 === pos3) {
+                    roundWon = true; // Sets the roundWon flag to true
+                    break; // Exits the loop as a win is found
+                }
+            }
+
+            // If the round is won
+            if (roundWon) {
+                statusDisplay.textContent = `Player ${currentPlayer} has won!`; // Updates the status display
+                gameActive = false; // Sets the gameActive flag to false
+                return; // Exits the function
+            }
+
+            // If there are no empty cells left and no winner, it's a draw
+            let roundDraw = !board.includes(''); // Checks if the board array contains any empty strings
+            if (roundDraw) {
+                statusDisplay.textContent = 'Game ends in a draw!'; // Updates the status display
+                gameActive = false; // Sets the gameActive flag to false
+                return; // Exits the function
+            }
+
+            // If no win or draw, switch to the other player
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; // Switches between X and O
+            statusDisplay.textContent = `Player ${currentPlayer}'s turn`; // Updates the status display
+        }
+	/* Coded by John Darryl T. Ocido */
+        // Function to restart the game
+        function restartGame() {
+            board = ['', '', '', '', '', '', '', '', '']; // Resets the board array to empty strings
+            currentPlayer = 'X'; // Resets the current player to X
+            gameActive = true; // Sets the gameActive flag back to true
+            statusDisplay.textContent = `Player ${currentPlayer}'s turn`; // Updates the status display
+            initializeBoard(); // Re-initializes the visual game board
+        }
+
+        // Adds an event listener to the restart button
+        restartButton.addEventListener('click', restartGame);
+
+        // Initializes the board when the page loads
+        initializeBoard();
+
+    </script>
+
+</body>
+</html>
